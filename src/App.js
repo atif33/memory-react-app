@@ -5,47 +5,55 @@ import Card from "./Card";
 import Atif from "./Atif";
 import shuffle from 'lodash.shuffle'
 import HallOfFame, {FAKE_HOF} from "./HalOfFame";
+import HighScoreInput from "./HighScoreInput";
 
 
 const SIDE = 6;
 const SYMBOLS = '😀🎉💖🎩🐶🐱🦄🐬🌍🌛🌞💫🍎🍌🍓🍐🍟🍿';
 const VISUAL_PAUSE_MSECS = 750
+
 class App extends Component {
 
     state = {
         cards: this.generateCards(),
         currentPair: [],
         guesses: 0,
+        hallOfFame: null,
         matchedCardIndices: []
     };
     // Initialiseur de champ => garantir le this
     handleCardClicked = index => {
-        const { currentPair } = this.state;
+        const {currentPair} = this.state;
 
         if (currentPair.length === 2) {
             return
         }
 
         if (currentPair.length === 0) {
-            this.setState({ currentPair: [index] });
+            this.setState({currentPair: [index]});
             return
         }
 
         this.handleNewPairClosedBy(index)
     };
 
+    // Arrow fx for binding
+    displayHallOfFame = (hallOfFame) => {
+        this.setState({hallOfFame})
+    }
+
     // permet d'arbitrer la paire fraîchement constituée et de faire effectivement avancer la partie
     handleNewPairClosedBy(index) {
-        const { cards, currentPair, guesses, matchedCardIndices } = this.state;
+        const {cards, currentPair, guesses, matchedCardIndices} = this.state;
 
         const newPair = [currentPair[0], index];
         const newGuesses = guesses + 1;
         const matched = cards[newPair[0]] === cards[newPair[1]];
-        this.setState({ currentPair: newPair, guesses: newGuesses });
+        this.setState({currentPair: newPair, guesses: newGuesses});
         if (matched) {
-            this.setState({ matchedCardIndices: [...matchedCardIndices, ...newPair] })
+            this.setState({matchedCardIndices: [...matchedCardIndices, ...newPair]})
         }
-        setTimeout(() => this.setState({ currentPair: [] }), VISUAL_PAUSE_MSECS)
+        setTimeout(() => this.setState({currentPair: []}), VISUAL_PAUSE_MSECS)
     }
 
     // génerer une cart avec un emoticon
@@ -62,7 +70,7 @@ class App extends Component {
 
     //  fonction qui return le feedback à utilser en prenent la postion du cart et examiner les carts déja pairer
     getFeedbackForCard(index) {
-        const { currentPair, matchedCardIndices } = this.state;
+        const {currentPair, matchedCardIndices} = this.state;
         const indexMatched = matchedCardIndices.includes(index);
 
         if (currentPair.length < 2) {
@@ -77,8 +85,8 @@ class App extends Component {
     }
 
     render() {
-        const {cards, guesses, matchedCardIndices} = this.state;
-        const won = matchedCardIndices.length === cards.length;
+        const {cards, guesses, hallOfFame, matchedCardIndices} = this.state;
+        const won = matchedCardIndices.length === 4;
         return (<div className="memory">
                 <GuessCount guesses={guesses}/>
                 {cards.map((card, index) => (
@@ -88,7 +96,14 @@ class App extends Component {
                           onClick={this.handleCardClicked}/>
                 ))}
                 <Atif count={3}/>
-                {won && <HallOfFame entries={FAKE_HOF}/>}
+                {
+                    won &&
+                    (hallOfFame ? (
+                        <HallOfFame entries={hallOfFame}/>
+                    ) : (
+                        <HighScoreInput guesses={guesses} onStored={this.displayHallOfFame}/>
+                    ))
+                }
             </div>
         )
     }
